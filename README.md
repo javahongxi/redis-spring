@@ -10,7 +10,66 @@ Spring Boot Starter for connecting to multiple Redis instances/clusters from a s
 - Standalone and Redis Cluster mode support
 - Lettuce connection pool support (commons-pool2)
 - Cluster topology auto-refresh
+- **Official Spring Boot Redis configuration format compatibility** — switch from official starter without changing config
 - Automatic exclusion of Spring Boot's default Redis auto-configurations
+
+## Official Format Compatibility
+
+This starter is compatible with the official Spring Boot Redis configuration format. If you're already using the official starter in production, you can switch to this starter **without changing your configuration**:
+
+### Standalone Mode (Official Format)
+
+```yaml
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: yourpassword
+      timeout: 2s
+```
+
+This is equivalent to:
+
+```yaml
+spring:
+  data:
+    redis:
+      clusters:
+        default:
+          host: localhost
+          port: 6379
+          password: yourpassword
+          timeout: 2s
+```
+
+### Cluster Mode (Official Format)
+
+```yaml
+spring:
+  data:
+    redis:
+      cluster:
+        nodes: localhost:7001,localhost:7002,localhost:7003
+        max-redirects: 3
+      password: yourpassword
+```
+
+This is equivalent to:
+
+```yaml
+spring:
+  data:
+    redis:
+      clusters:
+        default:
+          cluster:
+            nodes: localhost:7001,localhost:7002,localhost:7003
+            max-redirects: 3
+          password: yourpassword
+```
+
+When using official format, the cluster is named `default`, so beans are named `defaultRedisTemplate`, `defaultStringRedisTemplate`, etc.
 
 ## Quick Start
 

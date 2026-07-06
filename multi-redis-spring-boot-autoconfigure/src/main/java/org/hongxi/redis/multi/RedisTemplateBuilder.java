@@ -67,12 +67,19 @@ public class RedisTemplateBuilder {
 
     private LettuceConnectionFactory getConnectionFactory(String clusterName) {
         MultiRedisProperties.Cluster cluster = properties.getClusters().get(clusterName);
+        
+        // If cluster not found, check if using official format and clusterName is "default"
+        if (cluster == null && "default".equals(clusterName) && properties.isUsingOfficialFormat()) {
+            cluster = properties.createDefaultClusterFromOfficialFormat();
+        }
+        
         if (cluster == null) {
             throw new IllegalArgumentException(
                     "Redis cluster '" + clusterName + "' not found. Available: "
                             + properties.getClusters().keySet());
         }
-        return connectionFactoryCache.computeIfAbsent(clusterName, name -> createConnectionFactory(cluster));
+        final MultiRedisProperties.Cluster finalCluster = cluster;
+        return connectionFactoryCache.computeIfAbsent(clusterName, name -> createConnectionFactory(finalCluster));
     }
 
     private LettuceConnectionFactory createConnectionFactory(MultiRedisProperties.Cluster cluster) {

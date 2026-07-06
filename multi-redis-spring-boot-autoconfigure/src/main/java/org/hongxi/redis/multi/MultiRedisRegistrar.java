@@ -212,7 +212,100 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
             }
             clusters.put(clusterName, cc);
         }
+
+        // If no clusters found in multi-redis format, check for official format compatibility
+        if (clusters.isEmpty()) {
+            ClusterConfig defaultCluster = resolveOfficialFormatCluster();
+            if (defaultCluster != null) {
+                clusters.put("default", defaultCluster);
+                log.info("[multi-redis] Using official format configuration, created 'default' cluster");
+            }
+        }
+
         return clusters;
+    }
+
+    /**
+     * Resolve cluster configuration from official Spring Boot Redis format.
+     * Supports both standalone (host/port) and cluster (cluster.nodes) modes.
+     */
+    private ClusterConfig resolveOfficialFormatCluster() {
+        // Check for official cluster mode: spring.data.redis.cluster.nodes
+        String clusterNodesStr = environment.getProperty("spring.data.redis.cluster.nodes");
+        if (clusterNodesStr != null && !clusterNodesStr.isEmpty()) {
+            ClusterConfig cc = new ClusterConfig();
+            cc.clusterMode = true;
+            cc.clusterNodes = parseClusterNodes(clusterNodesStr);
+            log.info("[multi-redis] Official format: CLUSTER mode, nodes={}", cc.clusterNodes);
+
+            String maxRedirects = environment.getProperty("spring.data.redis.cluster.max-redirects");
+            if (maxRedirects != null) {
+                cc.clusterMaxRedirects = Integer.parseInt(maxRedirects);
+            }
+
+            // Common config
+            cc.username = environment.getProperty("spring.data.redis.username");
+            cc.password = environment.getProperty("spring.data.redis.password");
+            String timeoutStr = environment.getProperty("spring.data.redis.timeout");
+            if (timeoutStr != null) {
+                cc.timeout = parseDuration(timeoutStr);
+            }
+
+            // Pool config
+            resolveOfficialFormatPoolConfig(cc);
+            return cc;
+        }
+
+        // Check for official standalone mode: spring.data.redis.host
+        String host = environment.getProperty("spring.data.redis.host");
+        String url = environment.getProperty("spring.data.redis.url");
+        if (host != null || url != null) {
+            ClusterConfig cc = new ClusterConfig();
+            cc.clusterMode = false;
+            cc.url = url;
+            cc.host = environment.getProperty("spring.data.redis.host", "localhost");
+            cc.port = Integer.parseInt(environment.getProperty("spring.data.redis.port", "6379"));
+            cc.database = Integer.parseInt(environment.getProperty("spring.data.redis.database", "0"));
+            cc.username = environment.getProperty("spring.data.redis.username");
+            cc.password = environment.getProperty("spring.data.redis.password");
+            log.info("[multi-redis] Official format: STANDALONE mode, host={}, port={}", cc.host, cc.port);
+
+            String timeoutStr = environment.getProperty("spring.data.redis.timeout");
+            if (timeoutStr != null) {
+                cc.timeout = parseDuration(timeoutStr);
+            }
+
+            // Pool config
+            resolveOfficialFormatPoolConfig(cc);
+            return cc;
+        }
+
+        return null;
+    }
+
+    private List<String> parseClusterNodes(String nodesStr) {
+        List<String> nodes = new ArrayList<>();
+        for (String node : nodesStr.split(",")) {
+            String trimmed = node.trim();
+            if (!trimmed.isEmpty()) {
+                nodes.add(trimmed);
+            }
+        }
+        return nodes;
+    }
+
+    private void resolveOfficialFormatPoolConfig(ClusterConfig cc) {
+        String maxActive = environment.getProperty("spring.data.redis.lettuce.pool.max-active");
+        if (maxActive != null) {
+            cc.poolEnabled = true;
+            cc.poolMaxActive = Integer.parseInt(maxActive);
+            cc.poolMaxIdle = Integer.parseInt(environment.getProperty("spring.data.redis.lettuce.pool.max-idle", "8"));
+            cc.poolMinIdle = Integer.parseInt(environment.getProperty("spring.data.redis.lettuce.pool.min-idle", "0"));
+            String maxWait = environment.getProperty("spring.data.redis.lettuce.pool.max-wait");
+            if (maxWait != null) {
+                cc.poolMaxWait = parseDuration(maxWait);
+            }
+        }
     }
 
     private Duration parseDuration(String value) {
