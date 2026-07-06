@@ -10,8 +10,7 @@ Spring Boot Starter for connecting to multiple Redis instances/clusters from a s
 - Standalone and Redis Cluster mode support
 - Lettuce connection pool support (commons-pool2)
 - Cluster topology auto-refresh
-- Full compatibility with Spring Boot's official Redis Starter
-- Auto-configuration with `@ConfigurationProperties`
+- Automatic exclusion of Spring Boot's default Redis auto-configurations
 
 ## Quick Start
 
@@ -29,67 +28,25 @@ Spring Boot Starter for connecting to multiple Redis instances/clusters from a s
 
 ```yaml
 spring:
-  main:
-    web-application-type: none
   data:
     redis:
-      auto-register: true
+      auto-register: true          # set false to use Builder mode
       clusters:
-        # Standalone mode example
-        order:    # 集群名 → 生成 orderRedisTemplate
+        order:                     # Standalone → orderRedisTemplate
           host: localhost
           port: 6379
-          lettuce:
-            pool:
-              max-active: 16
-              max-idle: 8
-              min-idle: 2
-        user:    # 集群名 → 生成 userRedisTemplate
+        user:                      # Standalone → userRedisTemplate
           host: localhost
           port: 6380
-          lettuce:
-            pool:
-              max-active: 8
-              max-idle: 4
-              min-idle: 1
-        # Redis Cluster mode example
-        cache:    # 集群名 → 生成 cacheRedisTemplate
+        cache:                     # Redis Cluster → cacheRedisTemplate
           cluster:
-            nodes:
-              - localhost:7001
-              - localhost:7002
-              - localhost:7003
-            max-redirects: 3
-          timeout: 5000ms
-          lettuce:
-            pool:
-              max-active: 16
-              max-idle: 8
-              min-idle: 2
-              max-wait: 10000ms
-            cluster:
-              refresh:
-                adaptive: true
-                period: 2000ms
-        session: # 集群名 → 生成 sessionRedisTemplate
+            nodes: localhost:7001,localhost:7002,localhost:7003
+        session:                   # Redis Cluster → sessionRedisTemplate
           cluster:
-            nodes:
-              - localhost:7011
-              - localhost:7012
-              - localhost:7013
-            max-redirects: 3
-          timeout: 5000ms
-          lettuce:
-            pool:
-              max-active: 16
-              max-idle: 8
-              min-idle: 2
-              max-wait: 10000ms
-            cluster:
-              refresh:
-                adaptive: true
-                period: 2000ms
+            nodes: localhost:7011,localhost:7012,localhost:7013
 ```
+
+Optional per-cluster settings: `password`, `database`, `timeout`, `lettuce.pool.*`, `lettuce.cluster.refresh.*`.
 
 ### Mode 1 - Builder Pattern
 
@@ -140,14 +97,9 @@ public class MyController {
 }
 ```
 
-> **Note**: When using auto-register mode, you may need to exclude Spring Boot's default Redis auto-configuration:
-> ```java
-> @SpringBootApplication(exclude = {
->     RedisAutoConfiguration.class,
->     RedisReactiveAutoConfiguration.class,
->     RedisRepositoriesAutoConfiguration.class
-> })
-> ```
+> **Note**: Spring Boot's default Redis auto-configurations (`RedisAutoConfiguration`,
+> `RedisReactiveAutoConfiguration`, `RedisRepositoriesAutoConfiguration`) are automatically
+> excluded by `MultiRedisAutoConfigurationImportFilter` when this starter is on the classpath.
 
 ## Sample
 
@@ -203,58 +155,33 @@ cd multi-redis-spring-boot-sample
 mvn spring-boot:run
 ```
 
-The sample is a non-web app that automatically verifies all Redis connections on startup:
+The sample is a non-web app that automatically verifies all Redis connections on startup.
+Each connection is verified in three steps:
+
+1. **Config** — shows the expected target from connection factory configuration
+2. **Server** — queries `INFO server` to prove the actual Redis instance being connected to
+   - Standalone: shows `tcp_port` and `redis_version` from the server's INFO response
+   - Cluster: shows each node's port extracted from node-prefixed INFO keys (e.g. `127.0.0.1:7001.tcp_port`)
+3. **Read/Write** — performs a set/get/delete round-trip
 
 ```
 ========== Multi-Redis Sample Verification ==========
-[order] Redis OK: set=hello-order-1720000000000, get=hello-order-1720000000000
-[user]  Redis OK: set=hello-user-1720000000001, get=hello-user-1720000000001
-[cache] Redis OK: set=hello-cache-1720000000002, get=hello-cache-1720000000002
-[session] Redis OK: set=hello-session-1720000000003, get=hello-session-1720000000003
+[order]   Config -> localhost:6379
+[order]   Server -> tcp_port=6379, redis_version=8.0.1
+[order]   Read/Write OK: set=hello-order-..., get=hello-order-...
+[user]    Config -> localhost:6380
+[user]    Server -> tcp_port=6380, redis_version=8.0.1
+[user]    Read/Write OK: set=hello-user-..., get=hello-user-...
+[cache]   Config -> CLUSTER nodes=[localhost:7001, localhost:7002, localhost:7003]
+[cache]   Server -> CLUSTER nodes={127.0.0.1:7001=7001, 127.0.0.1:7002=7002, 127.0.0.1:7003=7003}, redis_version=8.0.1
+[cache]   Read/Write OK: set=hello-cache-..., get=hello-cache-...
+[session] Config -> CLUSTER nodes=[localhost:7011, localhost:7012, localhost:7013]
+[session] Server -> CLUSTER nodes={127.0.0.1:7011=7011, 127.0.0.1:7012=7012, 127.0.0.1:7013=7013}, redis_version=8.0.1
+[session] Read/Write OK: set=hello-session-..., get=hello-session-...
 ========== All verifications passed! ==========
 ```
 
-### Verify with redis-cli
-
-Standalone Redis:
-
-```bash
-# order (port 6379)
-redis-cli -p 6379 GET sample:test:order
-
-# user (port 6380)
-redis-cli -p 6380 GET sample:test:user
-```
-
-Redis Cluster (need `-c` flag for cluster mode):
-
-```bash
-# cache cluster (port 7001-7003)
-redis-cli -c -p 7001 GET sample:test:cache
-
-# session cluster (port 7011-7013)
-redis-cli -c -p 7011 GET sample:test:session
-
-# The sample also writes a JSON-serialized User object to the cache cluster
-redis-cli -c -p 7001 GET user
-```
-
-> The `sample:test:*` keys are set-then-deleted during verification, so they may not persist.
-> The `user` key (written via `cacheRedisTemplate` with Jackson JSON serializer) will remain:
-> ```
-> redis-cli -c -p 7001 GET user
-> # "{\"name\":\"lily\",\"age\":20,\"createDate\":\"2025-07-06T...\"}"
-> ```
-
-## Project Structure
-
-```
-multi-redis-spring-boot-starter/
-├── redis-cluster.sh                         # Redis Cluster management script
-├── multi-redis-spring-boot-autoconfigure/   # Auto-configuration module
-├── multi-redis-spring-boot-starter/         # Starter (dependencies only)
-└── multi-redis-spring-boot-sample/          # Sample project
-```
+The `Server` line comes directly from the Redis `INFO server` response, providing definitive proof that each template is connected to the correct Redis instance.
 
 ## License
 

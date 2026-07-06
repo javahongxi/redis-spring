@@ -1,7 +1,7 @@
 package org.hongxi.redis.multi.sample;
 
 import org.hongxi.redis.multi.RedisTemplateBuilder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,7 +21,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * @author javahongxi
  */
 @Configuration
-@ConditionalOnBean(RedisTemplateBuilder.class)
+@ConditionalOnProperty(name = "spring.data.redis.auto-register", havingValue = "false", matchIfMissing = true)
 public class SampleConfig {
 
     @Bean

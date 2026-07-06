@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
 /**
- * Auto-configuration for multiple Redis clusters support.
+ * Autoconfiguration for multiple Redis clusters support.
  * <p>
  * <b>Builder mode</b> (default): Inject {@link RedisTemplateBuilder} to create
  * {@code RedisTemplate} instances manually.
