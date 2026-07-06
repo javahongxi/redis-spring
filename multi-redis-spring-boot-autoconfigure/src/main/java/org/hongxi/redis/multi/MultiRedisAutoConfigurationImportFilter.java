@@ -3,8 +3,6 @@ package org.hongxi.redis.multi;
 import org.springframework.boot.autoconfigure.AutoConfigurationImportFilter;
 import org.springframework.boot.autoconfigure.AutoConfigurationMetadata;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -18,17 +16,17 @@ import java.util.Set;
  */
 public class MultiRedisAutoConfigurationImportFilter implements AutoConfigurationImportFilter {
 
-    private static final Set<String> EXCLUDED_CLASSES = new HashSet<>(Arrays.asList(
+    private static final Set<String> EXCLUDED_CLASSES = Set.of(
             "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
             "org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration",
             "org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
-    ));
+    );
 
     @Override
     public boolean[] match(String[] autoConfigurationClasses, AutoConfigurationMetadata autoConfigurationMetadata) {
         boolean[] match = new boolean[autoConfigurationClasses.length];
         for (int i = 0; i < autoConfigurationClasses.length; i++) {
-            match[i] = !EXCLUDED_CLASSES.contains(autoConfigurationClasses[i]);
+            match[i] = autoConfigurationClasses[i] == null || !EXCLUDED_CLASSES.contains(autoConfigurationClasses[i]);
         }
         return match;
     }

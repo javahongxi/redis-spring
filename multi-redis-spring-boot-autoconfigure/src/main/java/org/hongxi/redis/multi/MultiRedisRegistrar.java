@@ -105,11 +105,9 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
 
     private Map<String, ClusterConfig> resolveClusters() {
         Map<String, ClusterConfig> clusters = new LinkedHashMap<>();
-        if (!(environment instanceof ConfigurableEnvironment)) {
+        if (!(environment instanceof ConfigurableEnvironment ce)) {
             return clusters;
         }
-
-        ConfigurableEnvironment ce = (ConfigurableEnvironment) environment;
         Set<String> clusterNames = new LinkedHashSet<>();
         // Collect cluster.nodes entries from property names directly
         // Use TreeMap to sort by property name (ensures correct index order: [0], [1], [2]...)
