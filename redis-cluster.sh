@@ -188,9 +188,8 @@ case "$1" in
         done
         echo ""
         echo "Examples:"
-        echo "  $0 start              # Start default cluster (cache)"
-        echo "  $0 start session      # Start session cluster"
-        echo "  $0 start all          # Start all clusters"
+        echo "  $0 start              # Start all clusters"
+        echo "  $0 start session      # Start session cluster only"
         echo "  $0 stop all           # Stop all clusters"
         exit 1
         ;;
