@@ -37,11 +37,6 @@ public class RedisTemplateFactoryBean implements FactoryBean<RedisTemplate<Strin
     }
 
     @Override
-    public boolean isSingleton() {
-        return true;
-    }
-
-    @Override
     public void setBeanFactory(BeanFactory beanFactory) {
         this.beanFactory = beanFactory;
     }

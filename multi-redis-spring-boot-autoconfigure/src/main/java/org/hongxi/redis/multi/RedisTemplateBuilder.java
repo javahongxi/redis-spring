@@ -3,11 +3,11 @@ package org.hongxi.redis.multi;
 import io.lettuce.core.api.StatefulConnection;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,10 +56,10 @@ public class RedisTemplateBuilder {
 
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setKeySerializer(RedisSerializer.string());
+        template.setValueSerializer(RedisSerializer.json());
+        template.setHashKeySerializer(RedisSerializer.string());
+        template.setHashValueSerializer(RedisSerializer.json());
         template.afterPropertiesSet();
         return template;
     }
@@ -85,10 +85,12 @@ public class RedisTemplateBuilder {
                 }
                 factory = new LettuceConnectionFactory(config, builder.build());
             } else {
-                factory = new LettuceConnectionFactory(config);
+                LettuceClientConfiguration.LettuceClientConfigurationBuilder clientBuilder =
+                        LettuceClientConfiguration.builder();
                 if (cluster.getTimeout() != null) {
-                    factory.setTimeout(cluster.getTimeout().toMillis());
+                    clientBuilder.commandTimeout(cluster.getTimeout());
                 }
+                factory = new LettuceConnectionFactory(config, clientBuilder.build());
             }
             factory.afterPropertiesSet();
             return factory;

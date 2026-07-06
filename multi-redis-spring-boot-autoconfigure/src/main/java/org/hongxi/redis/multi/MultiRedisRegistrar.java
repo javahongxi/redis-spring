@@ -12,11 +12,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -91,8 +91,7 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
         ConfigurableEnvironment ce = (ConfigurableEnvironment) environment;
         Set<String> clusterNames = new LinkedHashSet<>();
         for (PropertySource<?> ps : ce.getPropertySources()) {
-            if (ps instanceof EnumerablePropertySource) {
-                EnumerablePropertySource<?> eps = (EnumerablePropertySource<?>) ps;
+            if (ps instanceof EnumerablePropertySource<?> eps) {
                 for (String name : eps.getPropertyNames()) {
                     if (name.startsWith("spring.redis.clusters.")) {
                         String rest = name.substring("spring.redis.clusters.".length());
@@ -176,10 +175,12 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
             }
             factory = new LettuceConnectionFactory(redisConfig, builder.build());
         } else {
-            factory = new LettuceConnectionFactory(redisConfig);
+            LettuceClientConfiguration.LettuceClientConfigurationBuilder clientBuilder =
+                    LettuceClientConfiguration.builder();
             if (config.timeout != null) {
-                factory.setTimeout(config.timeout.toMillis());
+                clientBuilder.commandTimeout(config.timeout);
             }
+            factory = new LettuceConnectionFactory(redisConfig, clientBuilder.build());
         }
         factory.afterPropertiesSet();
         return factory;
@@ -188,10 +189,10 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
     static RedisTemplate<String, Object> createRedisTemplate(LettuceConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setKeySerializer(RedisSerializer.string());
+        template.setValueSerializer(RedisSerializer.json());
+        template.setHashKeySerializer(RedisSerializer.string());
+        template.setHashValueSerializer(RedisSerializer.json());
         template.afterPropertiesSet();
         return template;
     }
