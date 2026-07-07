@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Verifies multi-Redis connectivity on startup (connection & server info only).
+ * Verifies multi-Redis connectivity on startup (connection and server info only).
  *
  * @author javahongxi
  */
