@@ -12,7 +12,7 @@
 
     <groupId>org.hongxi</groupId>
     <artifactId>multi-redis-spring-boot</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
     <name>multi-redis-spring-boot</name>
     <description>Spring Boot Starter for multiple Redis clusters</description>
@@ -37,14 +37,18 @@
 
     <developers>
         <developer>
+            <id>javahongxi</id>
             <name>javahongxi</name>
+            <email>javahongxi@qq.com</email>
             <url>https://github.com/javahongxi</url>
         </developer>
     </developers>
 
     <scm>
         <connection>scm:git:git://github.com/javahongxi/multi-redis-spring-boot-starter.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/javahongxi/multi-redis-spring-boot-starter.git</developerConnection>
         <url>https://github.com/javahongxi/multi-redis-spring-boot-starter</url>
+        <tag>HEAD</tag>
     </scm>
 
 </project>
