@@ -81,7 +81,7 @@ When using official format, the cluster is named `default`, so beans are named `
 <dependency>
     <groupId>org.hongxi</groupId>
     <artifactId>multi-redis-spring-boot-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
