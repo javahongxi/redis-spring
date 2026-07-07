@@ -160,6 +160,7 @@ public class MultiRedisProperties {
         private Duration connectTimeout;
         private ClusterConfig cluster = new ClusterConfig();
         private Lettuce lettuce = new Lettuce();
+        private Serializer serializer = new Serializer();
 
         public String getUrl() { return url; }
         public void setUrl(String url) { this.url = url; }
@@ -191,12 +192,60 @@ public class MultiRedisProperties {
         public Lettuce getLettuce() { return lettuce; }
         public void setLettuce(Lettuce lettuce) { this.lettuce = lettuce; }
 
+        public Serializer getSerializer() { return serializer; }
+        public void setSerializer(Serializer serializer) { this.serializer = serializer; }
+
         /**
          * Check if this is a Redis Cluster mode (nodes configured).
          */
         public boolean isClusterMode() {
             return cluster != null && cluster.getNodes() != null && !cluster.getNodes().isEmpty();
         }
+    }
+
+    /**
+     * Serializer configuration for RedisTemplate.
+     * <p>
+     * Supported types: java, json, string, byteArray
+     * <ul>
+     *   <li>java - JdkSerializationRedisSerializer (official default)</li>
+     *   <li>json - GenericJackson2JsonRedisSerializer</li>
+     *   <li>string - StringRedisSerializer</li>
+     *   <li>byteArray - ByteArrayRedisSerializer</li>
+     * </ul>
+     */
+    public static class Serializer {
+
+        private SerializerType key = SerializerType.java;
+        private SerializerType value = SerializerType.java;
+        private SerializerType hashKey = SerializerType.java;
+        private SerializerType hashValue = SerializerType.java;
+
+        public SerializerType getKey() { return key; }
+        public void setKey(SerializerType key) { this.key = key; }
+
+        public SerializerType getValue() { return value; }
+        public void setValue(SerializerType value) { this.value = value; }
+
+        public SerializerType getHashKey() { return hashKey; }
+        public void setHashKey(SerializerType hashKey) { this.hashKey = hashKey; }
+
+        public SerializerType getHashValue() { return hashValue; }
+        public void setHashValue(SerializerType hashValue) { this.hashValue = hashValue; }
+    }
+
+    /**
+     * Supported serializer types.
+     */
+    public enum SerializerType {
+        /** JdkSerializationRedisSerializer - Java serialization (official default) */
+        java,
+        /** GenericJackson2JsonRedisSerializer - Jackson JSON */
+        json,
+        /** StringRedisSerializer - UTF-8 String */
+        string,
+        /** ByteArrayRedisSerializer - byte[] passthrough */
+        byteArray
     }
 
     /**

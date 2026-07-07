@@ -34,21 +34,60 @@ public class RedisTemplateBuilder {
     }
 
     /**
-     * Select a cluster by name and return a configured {@link RedisTemplate}.
+     * Select a cluster by name and return a {@link RedisTemplateConfigurer} for building
+     * a configured {@link RedisTemplate}.
+     * <p>
+     * Example usage:
+     * <pre>
+     * // With default serializers (java serialization, same as official)
+     * RedisTemplate&lt;String, Object&gt; template = builder.cluster("order").build();
+     *
+     * // With custom serializers
+     * RedisTemplate&lt;String, Object&gt; template = builder.cluster("order")
+     *     .keySerializer(RedisSerializer.string())
+     *     .valueSerializer(RedisSerializer.json())
+     *     .build();
+     * </pre>
      *
      * @param clusterName the cluster name defined in spring.data.redis.clusters.{name}
-     * @return a new RedisTemplate connected to the specified cluster
+     * @return a RedisTemplateConfigurer for building the RedisTemplate
      */
-    public RedisTemplate<String, Object> cluster(String clusterName) {
+    public RedisTemplateConfigurer<String, Object> cluster(String clusterName) {
         LettuceConnectionFactory factory = getConnectionFactory(clusterName);
+        MultiRedisProperties.Cluster cluster = resolveCluster(clusterName);
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
-        template.setKeySerializer(RedisSerializer.string());
-        template.setValueSerializer(RedisSerializer.json());
-        template.setHashKeySerializer(RedisSerializer.string());
-        template.setHashValueSerializer(RedisSerializer.json());
-        template.afterPropertiesSet();
-        return template;
+        // Set serializers from configuration (default: java serialization, same as official)
+        applySerializers(template, cluster);
+        return new RedisTemplateConfigurer<>(template);
+    }
+
+    private MultiRedisProperties.Cluster resolveCluster(String clusterName) {
+        MultiRedisProperties.Cluster cluster = properties.getClusters().get(clusterName);
+        if (cluster == null && "default".equals(clusterName) && properties.isUsingOfficialFormat()) {
+            cluster = properties.createDefaultClusterFromOfficialFormat();
+        }
+        return cluster;
+    }
+
+    private void applySerializers(RedisTemplate<String, Object> template, MultiRedisProperties.Cluster cluster) {
+        MultiRedisProperties.Serializer serializerConfig = cluster.getSerializer();
+        template.setKeySerializer(toRedisSerializer(serializerConfig.getKey()));
+        template.setValueSerializer(toRedisSerializer(serializerConfig.getValue()));
+        template.setHashKeySerializer(toRedisSerializer(serializerConfig.getHashKey()));
+        template.setHashValueSerializer(toRedisSerializer(serializerConfig.getHashValue()));
+    }
+
+    private RedisSerializer<?> toRedisSerializer(MultiRedisProperties.SerializerType type) {
+        if (type == null) {
+            return RedisSerializer.java();
+        }
+        return switch (type) {
+            case java -> RedisSerializer.java();
+            case json -> RedisSerializer.json();
+            case string -> RedisSerializer.string();
+            case byteArray -> RedisSerializer.byteArray();
+        };
     }
 
     /**

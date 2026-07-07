@@ -19,16 +19,18 @@ import org.springframework.data.redis.core.RedisTemplate;
 public class RedisTemplateFactoryBean implements FactoryBean<RedisTemplate<String, Object>>, BeanFactoryAware {
 
     private final String connectionFactoryBeanName;
+    private final MultiRedisRegistrar.ClusterConfig config;
     private BeanFactory beanFactory;
 
-    public RedisTemplateFactoryBean(String connectionFactoryBeanName) {
+    public RedisTemplateFactoryBean(String connectionFactoryBeanName, MultiRedisRegistrar.ClusterConfig config) {
         this.connectionFactoryBeanName = connectionFactoryBeanName;
+        this.config = config;
     }
 
     @Override
     public RedisTemplate<String, Object> getObject() {
         LettuceConnectionFactory factory = beanFactory.getBean(connectionFactoryBeanName, LettuceConnectionFactory.class);
-        return MultiRedisRegistrar.createRedisTemplate(factory);
+        return MultiRedisRegistrar.createRedisTemplate(factory, config);
     }
 
     @Override

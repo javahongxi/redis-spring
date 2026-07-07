@@ -94,6 +94,7 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
             GenericBeanDefinition templateDef = new GenericBeanDefinition();
             templateDef.setBeanClass(RedisTemplateFactoryBean.class);
             templateDef.getConstructorArgumentValues().addGenericArgumentValue(factoryBeanName);
+            templateDef.getConstructorArgumentValues().addGenericArgumentValue(config);
             registry.registerBeanDefinition(templateBeanName, templateDef);
 
             // Register StringRedisTemplate bean
@@ -210,6 +211,14 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
                     cc.poolMaxWait = parseDuration(maxWait);
                 }
             }
+
+            // Serializer config
+            String serializerPrefix = prefix + "serializer.";
+            cc.serializerKey = parseSerializerType(environment.getProperty(serializerPrefix + "key"));
+            cc.serializerValue = parseSerializerType(environment.getProperty(serializerPrefix + "value"));
+            cc.serializerHashKey = parseSerializerType(environment.getProperty(serializerPrefix + "hash-key"));
+            cc.serializerHashValue = parseSerializerType(environment.getProperty(serializerPrefix + "hash-value"));
+
             clusters.put(clusterName, cc);
         }
 
@@ -322,6 +331,30 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
             return Duration.ofMinutes(Long.parseLong(value.substring(0, value.length() - 1)));
         }
         return Duration.ofSeconds(Long.parseLong(value));
+    }
+
+    private MultiRedisProperties.SerializerType parseSerializerType(String value) {
+        if (value == null || value.isEmpty()) {
+            return null; // Will use default (java)
+        }
+        try {
+            return MultiRedisProperties.SerializerType.valueOf(value.toLowerCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("[multi-redis] Unknown serializer type '{}', using default", value);
+            return null;
+        }
+    }
+
+    private RedisSerializer<?> toRedisSerializer(MultiRedisProperties.SerializerType type) {
+        if (type == null) {
+            return RedisSerializer.java();
+        }
+        return switch (type) {
+            case java -> RedisSerializer.java();
+            case json -> RedisSerializer.json();
+            case string -> RedisSerializer.string();
+            case byteArray -> RedisSerializer.byteArray();
+        };
     }
 
     static LettuceConnectionFactory createConnectionFactory(ClusterConfig config) {
@@ -490,15 +523,28 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
         return builder.build();
     }
 
-    static RedisTemplate<String, Object> createRedisTemplate(LettuceConnectionFactory factory) {
+    static RedisTemplate<String, Object> createRedisTemplate(LettuceConnectionFactory factory, ClusterConfig config) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
-        template.setKeySerializer(RedisSerializer.string());
-        template.setValueSerializer(RedisSerializer.json());
-        template.setHashKeySerializer(RedisSerializer.string());
-        template.setHashValueSerializer(RedisSerializer.json());
+        // Set serializers from configuration (default: java serialization, same as official)
+        template.setKeySerializer(toRedisSerializerStatic(config.serializerKey));
+        template.setValueSerializer(toRedisSerializerStatic(config.serializerValue));
+        template.setHashKeySerializer(toRedisSerializerStatic(config.serializerHashKey));
+        template.setHashValueSerializer(toRedisSerializerStatic(config.serializerHashValue));
         template.afterPropertiesSet();
         return template;
+    }
+
+    private static RedisSerializer<?> toRedisSerializerStatic(MultiRedisProperties.SerializerType type) {
+        if (type == null) {
+            return RedisSerializer.java();
+        }
+        return switch (type) {
+            case java -> RedisSerializer.java();
+            case json -> RedisSerializer.json();
+            case string -> RedisSerializer.string();
+            case byteArray -> RedisSerializer.byteArray();
+        };
     }
 
     static StringRedisTemplate createStringRedisTemplate(LettuceConnectionFactory factory) {
@@ -508,7 +554,7 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
         return template;
     }
 
-    private static class ClusterConfig {
+    static class ClusterConfig {
         // Standalone mode
         String host = "localhost";
         int port = 6379;
@@ -535,5 +581,11 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
         int poolMaxIdle = 8;
         int poolMinIdle = 0;
         Duration poolMaxWait;
+
+        // Serializer config
+        MultiRedisProperties.SerializerType serializerKey;
+        MultiRedisProperties.SerializerType serializerValue;
+        MultiRedisProperties.SerializerType serializerHashKey;
+        MultiRedisProperties.SerializerType serializerHashValue;
     }
 }

@@ -7,6 +7,11 @@ spring:
         order:    # 集群名 → 生成 orderRedisTemplate
           host: localhost
           port: 6379
+          serializer:
+            key: string
+            value: json
+            hash-key: string
+            hash-value: json
           lettuce:
             pool:
               max-active: 16
@@ -15,6 +20,11 @@ spring:
         user:    # 集群名 → 生成 userRedisTemplate
           host: localhost
           port: 6380
+          serializer:
+            key: string
+            value: json
+            hash-key: string
+            hash-value: json
           lettuce:
             pool:
               max-active: 8
@@ -28,6 +38,11 @@ spring:
               - localhost:7002
               - localhost:7003
             max-redirects: 3
+          serializer:
+            key: string
+            value: json
+            hash-key: string
+            hash-value: json
           timeout: 5000ms
           lettuce:
             pool:
@@ -46,6 +61,11 @@ spring:
               - localhost:7012
               - localhost:7013
             max-redirects: 3
+          serializer:
+            key: string
+            value: json
+            hash-key: string
+            hash-value: json
           timeout: 5000ms
           lettuce:
             pool:

@@ -3,73 +3,56 @@ package org.hongxi.redis.multi.sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
 /**
- * Verifies multi-Redis connectivity on startup.
+ * Verifies multi-Redis connectivity on startup (connection & server info only).
  *
  * @author javahongxi
  */
+@Order(1)
 @Component
-public class SampleRunner implements CommandLineRunner {
+public class ConnectionSampleRunner implements CommandLineRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(SampleRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(ConnectionSampleRunner.class);
 
     private final StringRedisTemplate orderStringRedisTemplate;
     private final StringRedisTemplate userStringRedisTemplate;
     private final StringRedisTemplate cacheStringRedisTemplate;
     private final StringRedisTemplate sessionStringRedisTemplate;
 
-    private final RedisTemplate<String, Object> cacheRedisTemplate;
-
-    public SampleRunner(StringRedisTemplate orderStringRedisTemplate,
-                        StringRedisTemplate userStringRedisTemplate,
-                        StringRedisTemplate cacheStringRedisTemplate,
-                        StringRedisTemplate sessionStringRedisTemplate,
-                        RedisTemplate<String, Object> cacheRedisTemplate) {
+    public ConnectionSampleRunner(StringRedisTemplate orderStringRedisTemplate,
+                                  StringRedisTemplate userStringRedisTemplate,
+                                  StringRedisTemplate cacheStringRedisTemplate,
+                                  StringRedisTemplate sessionStringRedisTemplate) {
         this.orderStringRedisTemplate = orderStringRedisTemplate;
         this.userStringRedisTemplate = userStringRedisTemplate;
         this.cacheStringRedisTemplate = cacheStringRedisTemplate;
         this.sessionStringRedisTemplate = sessionStringRedisTemplate;
-        this.cacheRedisTemplate = cacheRedisTemplate;
     }
 
     @Override
     public void run(String... args) {
-        log.info("========== Multi-Redis Sample Verification ==========");
+        log.info("========== Multi-Redis Connection Verification ==========");
 
-        // Verify order Redis standalone (port 6379)
-        verifyRedis("order", orderStringRedisTemplate);
+        verifyConnection("order", orderStringRedisTemplate);
+        verifyConnection("user", userStringRedisTemplate);
+        verifyConnection("cache", cacheStringRedisTemplate);
+        verifyConnection("session", sessionStringRedisTemplate);
 
-        // Verify user Redis standalone (port 6380)
-        verifyRedis("user", userStringRedisTemplate);
-
-        // Verify cache Redis cluster (port 7001-7003)
-        verifyRedis("cache", cacheStringRedisTemplate);
-
-        // Verify session Redis cluster (port 7011-7013)
-        verifyRedis("session", sessionStringRedisTemplate);
-
-        log.info("========== All verifications passed! ==========");
-
-        // Verify RedisTemplate
-        User user = new User("lily", 20, new Date());
-        cacheRedisTemplate.opsForValue().set("user", user);
-        log.info("user: {}", cacheRedisTemplate.opsForValue().get("user"));
-        cacheRedisTemplate.delete("user");
+        log.info("========== Connection verification complete ==========");
     }
 
-    private void verifyRedis(String name, StringRedisTemplate template) {
+    private void verifyConnection(String name, StringRedisTemplate template) {
         try {
             LettuceConnectionFactory factory = (LettuceConnectionFactory) template.getConnectionFactory();
 
@@ -104,22 +87,8 @@ public class SampleRunner implements CommandLineRunner {
                 }
                 log.info("[{}] Server -> CLUSTER nodes={}, redis_version={}", name, nodePorts, version);
             }
-
-            // 3. Verify read/write
-            String key = "sample:test:" + name;
-            String value = "hello-" + name + "-" + System.currentTimeMillis();
-
-            template.opsForValue().set(key, value);
-            Object result = template.opsForValue().get(key);
-            template.delete(key);
-
-            if (value.equals(result)) {
-                log.info("[{}] Read/Write OK: set={}, get={}", name, value, result);
-            } else {
-                log.error("[{}] Read/Write MISMATCH: set={}, get={}", name, value, result);
-            }
         } catch (Exception e) {
-            log.error("[{}] Redis FAILED: {}", name, e.getMessage());
+            log.error("[{}] Connection verification FAILED: {}", name, e.getMessage());
         }
     }
 }

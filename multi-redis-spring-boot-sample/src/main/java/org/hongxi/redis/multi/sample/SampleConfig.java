@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 /**
  * Demonstrates how to create multiple RedisTemplate instances
@@ -26,22 +27,42 @@ public class SampleConfig {
 
     @Bean
     public RedisTemplate<String, Object> orderRedisTemplate(RedisTemplateBuilder builder) {
-        return builder.cluster("order");
+        return builder.cluster("order")
+                .keySerializer(RedisSerializer.string())
+                .valueSerializer(RedisSerializer.json())
+                .hashKeySerializer(RedisSerializer.string())
+                .hashValueSerializer(RedisSerializer.json())
+                .build();
     }
 
     @Bean
     public RedisTemplate<String, Object> userRedisTemplate(RedisTemplateBuilder builder) {
-        return builder.cluster("user");
+        return builder.cluster("user")
+                .keySerializer(RedisSerializer.string())
+                .valueSerializer(RedisSerializer.json())
+                .hashKeySerializer(RedisSerializer.string())
+                .hashValueSerializer(RedisSerializer.json())
+                .build();
     }
 
     @Bean
     public RedisTemplate<String, Object> cacheRedisTemplate(RedisTemplateBuilder builder) {
-        return builder.cluster("cache");
+        return builder.cluster("cache")
+                .keySerializer(RedisSerializer.string())
+                .valueSerializer(RedisSerializer.json())
+                .hashKeySerializer(RedisSerializer.string())
+                .hashValueSerializer(RedisSerializer.json())
+                .build();
     }
 
     @Bean
     public RedisTemplate<String, Object> sessionRedisTemplate(RedisTemplateBuilder builder) {
-        return builder.cluster("session");
+        return builder.cluster("session")
+                .keySerializer(RedisSerializer.string())
+                .valueSerializer(RedisSerializer.json())
+                .hashKeySerializer(RedisSerializer.string())
+                .hashValueSerializer(RedisSerializer.json())
+                .build();
     }
 
     // --- StringRedisTemplate beans ---
