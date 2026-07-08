@@ -6,8 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.ReflectionUtils;
@@ -19,8 +17,7 @@ import java.lang.reflect.Field;
  * RedisTemplate injection.
  * <p>
  * This processor scans all beans for fields annotated with {@code @RedisCluster}
- * and injects the appropriate RedisTemplate, StringRedisTemplate,
- * ReactiveRedisTemplate or ReactiveStringRedisTemplate instance
+ * and injects the appropriate RedisTemplate or StringRedisTemplate instance
  * based on the field type and cluster name specified in the annotation.
  *
  * @author javahongxi
@@ -67,15 +64,7 @@ public class RedisClusterBeanPostProcessor implements BeanPostProcessor {
         try {
             Object template;
             
-            if (ReactiveStringRedisTemplate.class.isAssignableFrom(fieldType)) {
-                template = builder.reactiveStringTemplate(clusterName);
-                log.info("[multi-redis] Injected ReactiveStringRedisTemplate for cluster '{}' into {}.{}", 
-                        clusterName, bean.getClass().getSimpleName(), field.getName());
-            } else if (ReactiveRedisTemplate.class.isAssignableFrom(fieldType)) {
-                template = builder.reactiveTemplate(clusterName);
-                log.info("[multi-redis] Injected ReactiveRedisTemplate for cluster '{}' into {}.{}", 
-                        clusterName, bean.getClass().getSimpleName(), field.getName());
-            } else if (StringRedisTemplate.class.isAssignableFrom(fieldType)) {
+            if (StringRedisTemplate.class.isAssignableFrom(fieldType)) {
                 template = builder.stringTemplate(clusterName);
                 log.info("[multi-redis] Injected StringRedisTemplate for cluster '{}' into {}.{}", 
                         clusterName, bean.getClass().getSimpleName(), field.getName());
@@ -86,8 +75,7 @@ public class RedisClusterBeanPostProcessor implements BeanPostProcessor {
             } else {
                 throw new IllegalArgumentException(
                         "Field '" + field.getName() + "' in class '" + bean.getClass().getName() + 
-                        "' annotated with @RedisCluster must be of type RedisTemplate, StringRedisTemplate, " +
-                        "ReactiveRedisTemplate or ReactiveStringRedisTemplate, " +
+                        "' annotated with @RedisCluster must be of type RedisTemplate or StringRedisTemplate, " +
                         "but found type: " + fieldType.getName());
             }
             

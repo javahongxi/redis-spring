@@ -17,9 +17,7 @@ import java.util.Set;
 public class MultiRedisAutoConfigurationImportFilter implements AutoConfigurationImportFilter {
 
     private static final Set<String> EXCLUDED_CLASSES = Set.of(
-            "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
-            "org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration",
-            "org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
+            "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration"
     );
 
     @Override

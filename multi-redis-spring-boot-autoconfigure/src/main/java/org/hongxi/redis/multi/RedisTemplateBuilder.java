@@ -12,11 +12,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 import java.util.Map;
@@ -108,43 +105,6 @@ public class RedisTemplateBuilder {
         template.setConnectionFactory(factory);
         template.afterPropertiesSet();
         return template;
-    }
-
-    /**
-     * Select a cluster by name and return a configured {@link ReactiveRedisTemplate}.
-     * <p>
-     * The reactive template uses the same serializer configuration as the blocking template.
-     *
-     * @param clusterName the cluster name defined in spring.data.redis.clusters.{name}
-     * @return a new ReactiveRedisTemplate connected to the specified cluster
-     */
-    public ReactiveRedisTemplate<String, Object> reactiveTemplate(String clusterName) {
-        LettuceConnectionFactory factory = getConnectionFactory(clusterName);
-        MultiRedisProperties.Cluster cluster = resolveCluster(clusterName);
-        RedisSerializationContext<String, Object> serializationContext = buildSerializationContext(cluster);
-        return new ReactiveRedisTemplate<>(factory, serializationContext);
-    }
-
-    /**
-     * Select a cluster by name and return a configured {@link ReactiveStringRedisTemplate}.
-     *
-     * @param clusterName the cluster name defined in spring.data.redis.clusters.{name}
-     * @return a new ReactiveStringRedisTemplate connected to the specified cluster
-     */
-    public ReactiveStringRedisTemplate reactiveStringTemplate(String clusterName) {
-        LettuceConnectionFactory factory = getConnectionFactory(clusterName);
-        return new ReactiveStringRedisTemplate(factory);
-    }
-
-    @SuppressWarnings("unchecked")
-    private RedisSerializationContext<String, Object> buildSerializationContext(MultiRedisProperties.Cluster cluster) {
-        MultiRedisProperties.Serializer serializerConfig = cluster.getSerializer();
-        return RedisSerializationContext.<String, Object>newSerializationContext()
-                .key((RedisSerializer<String>) toRedisSerializer(serializerConfig.getKey()))
-                .value((RedisSerializer<Object>) toRedisSerializer(serializerConfig.getValue()))
-                .hashKey((RedisSerializer<String>) toRedisSerializer(serializerConfig.getHashKey()))
-                .hashValue((RedisSerializer<Object>) toRedisSerializer(serializerConfig.getHashValue()))
-                .build();
     }
 
     private LettuceConnectionFactory getConnectionFactory(String clusterName) {

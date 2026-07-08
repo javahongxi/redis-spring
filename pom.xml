@@ -12,7 +12,7 @@
 
     <groupId>org.hongxi</groupId>
     <artifactId>multi-redis-spring-boot</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
     <name>multi-redis-spring-boot</name>
     <description>Spring Boot Starter for multiple Redis clusters</description>
@@ -26,7 +26,6 @@
 
     <properties>
         <java.version>17</java.version>
-        <maven.javadoc.source>17</maven.javadoc.source>
     </properties>
 
     <licenses>

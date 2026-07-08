@@ -20,11 +20,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 import org.slf4j.Logger;
@@ -46,16 +43,12 @@ import java.util.TreeMap;
  * Enabled when {@code spring.data.redis.auto-register=true}.
  * <p>
  * For each cluster entry, a {@link LettuceConnectionFactory},
- * a {@link RedisTemplate}, a {@link StringRedisTemplate},
- * a {@link org.springframework.data.redis.core.ReactiveRedisTemplate ReactiveRedisTemplate}
- * and a {@link org.springframework.data.redis.core.ReactiveStringRedisTemplate ReactiveStringRedisTemplate} bean
+ * a {@link RedisTemplate} and a {@link StringRedisTemplate} bean
  * are registered with the naming convention:
  * <ul>
  *   <li>{@code {clusterName}RedisConnectionFactory}</li>
  *   <li>{@code {clusterName}RedisTemplate}</li>
  *   <li>{@code {clusterName}StringRedisTemplate}</li>
- *   <li>{@code {clusterName}ReactiveRedisTemplate}</li>
- *   <li>{@code {clusterName}ReactiveStringRedisTemplate}</li>
  * </ul>
  *
  * @author javahongxi
@@ -132,21 +125,6 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
             stringTemplateDef.setBeanClass(StringRedisTemplateFactoryBean.class);
             stringTemplateDef.getConstructorArgumentValues().addGenericArgumentValue(factoryBeanName);
             registry.registerBeanDefinition(stringTemplateBeanName, stringTemplateDef);
-
-            // Register ReactiveRedisTemplate bean
-            String reactiveTemplateBeanName = clusterName + "ReactiveRedisTemplate";
-            GenericBeanDefinition reactiveTemplateDef = new GenericBeanDefinition();
-            reactiveTemplateDef.setBeanClass(ReactiveRedisTemplateFactoryBean.class);
-            reactiveTemplateDef.getConstructorArgumentValues().addGenericArgumentValue(factoryBeanName);
-            reactiveTemplateDef.getConstructorArgumentValues().addGenericArgumentValue(config);
-            registry.registerBeanDefinition(reactiveTemplateBeanName, reactiveTemplateDef);
-
-            // Register ReactiveStringRedisTemplate bean
-            String reactiveStringTemplateBeanName = clusterName + "ReactiveStringRedisTemplate";
-            GenericBeanDefinition reactiveStringTemplateDef = new GenericBeanDefinition();
-            reactiveStringTemplateDef.setBeanClass(ReactiveStringRedisTemplateFactoryBean.class);
-            reactiveStringTemplateDef.getConstructorArgumentValues().addGenericArgumentValue(factoryBeanName);
-            registry.registerBeanDefinition(reactiveStringTemplateBeanName, reactiveStringTemplateDef);
         }
     }
 
@@ -633,25 +611,6 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
         template.setConnectionFactory(factory);
         template.afterPropertiesSet();
         return template;
-    }
-
-    static ReactiveRedisTemplate<String, Object> createReactiveRedisTemplate(LettuceConnectionFactory factory, ClusterConfig config) {
-        RedisSerializationContext<String, Object> serializationContext = buildSerializationContext(config);
-        return new ReactiveRedisTemplate<>(factory, serializationContext);
-    }
-
-    static ReactiveStringRedisTemplate createReactiveStringRedisTemplate(LettuceConnectionFactory factory) {
-        return new ReactiveStringRedisTemplate(factory);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static RedisSerializationContext<String, Object> buildSerializationContext(ClusterConfig config) {
-        return RedisSerializationContext.<String, Object>newSerializationContext()
-                .key((RedisSerializer<String>) toRedisSerializerStatic(config.serializerKey))
-                .value((RedisSerializer<Object>) toRedisSerializerStatic(config.serializerValue))
-                .hashKey((RedisSerializer<String>) toRedisSerializerStatic(config.serializerHashKey))
-                .hashValue((RedisSerializer<Object>) toRedisSerializerStatic(config.serializerHashValue))
-                .build();
     }
 
     public static class ClusterConfig {

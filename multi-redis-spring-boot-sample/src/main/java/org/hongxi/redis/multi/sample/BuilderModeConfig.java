@@ -11,8 +11,6 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -153,70 +151,6 @@ public class BuilderModeConfig implements InitializingBean {
     public StringRedisTemplate sessionStringRedisTemplate(RedisTemplateBuilder builder) {
         if (!hasCluster("session")) return null;
         return builder.stringTemplate("session");
-    }
-
-    // --- ReactiveRedisTemplate beans ---
-
-    @Bean
-    public ReactiveRedisTemplate<String, Object> defaultReactiveRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("default")) return null;
-        return builder.reactiveTemplate("default");
-    }
-
-    @Bean
-    public ReactiveRedisTemplate<String, Object> orderReactiveRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("order")) return null;
-        return builder.reactiveTemplate("order");
-    }
-
-    @Bean
-    public ReactiveRedisTemplate<String, Object> userReactiveRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("user")) return null;
-        return builder.reactiveTemplate("user");
-    }
-
-    @Bean
-    public ReactiveRedisTemplate<String, Object> cacheReactiveRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("cache")) return null;
-        return builder.reactiveTemplate("cache");
-    }
-
-    @Bean
-    public ReactiveRedisTemplate<String, Object> sessionReactiveRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("session")) return null;
-        return builder.reactiveTemplate("session");
-    }
-
-    // --- ReactiveStringRedisTemplate beans ---
-
-    @Bean
-    public ReactiveStringRedisTemplate defaultReactiveStringRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("default")) return null;
-        return builder.reactiveStringTemplate("default");
-    }
-
-    @Bean
-    public ReactiveStringRedisTemplate orderReactiveStringRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("order")) return null;
-        return builder.reactiveStringTemplate("order");
-    }
-
-    @Bean
-    public ReactiveStringRedisTemplate userReactiveStringRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("user")) return null;
-        return builder.reactiveStringTemplate("user");
-    }
-
-    @Bean
-    public ReactiveStringRedisTemplate cacheReactiveStringRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("cache")) return null;
-        return builder.reactiveStringTemplate("cache");
-    }
-
-    @Bean
-    public ReactiveStringRedisTemplate sessionReactiveStringRedisTemplate(RedisTemplateBuilder builder) {
-        if (!hasCluster("session")) return null;
-        return builder.reactiveStringTemplate("session");
     }
 
     // --- Helper ---

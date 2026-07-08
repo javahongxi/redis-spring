@@ -16,12 +16,6 @@ import java.lang.annotation.Target;
  *
  * &#64;RedisCluster("order")
  * private StringRedisTemplate orderStringRedisTemplate;
- *
- * &#64;RedisCluster("order")
- * private ReactiveRedisTemplate&lt;String, Object&gt; orderReactiveRedisTemplate;
- *
- * &#64;RedisCluster("order")
- * private ReactiveStringRedisTemplate orderReactiveStringRedisTemplate;
  * </pre>
  * <p>
  * The cluster name must match a cluster defined in {@code spring.data.redis.clusters.{name}}.
