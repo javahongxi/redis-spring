@@ -88,7 +88,7 @@ When using official format, the cluster is named `default`, so beans are named `
 <dependency>
     <groupId>org.hongxi</groupId>
     <artifactId>multi-redis-spring-boot-starter</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
@@ -467,7 +467,7 @@ The `Server` line comes directly from the Redis `INFO server` response, providin
 <dependency>
     <groupId>org.hongxi</groupId>
     <artifactId>multi-redis-spring-boot-starter</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
