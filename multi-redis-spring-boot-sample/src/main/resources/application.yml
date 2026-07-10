@@ -1,3 +1,10 @@
+# 3 standalone (6379/6380/6381) + 2 cluster (cache:7001-7006, session:7011-7016)
+#  brew services start redis
+#  redis-server /opt/homebrew/etc/redis.conf --port 6380
+#  redis-server /opt/homebrew/etc/redis.conf --port 6381
+#  sh redis-cluster.sh start cache
+#  sh redis-cluster.sh start session
+
 spring:
   profiles:
     active: mixed
