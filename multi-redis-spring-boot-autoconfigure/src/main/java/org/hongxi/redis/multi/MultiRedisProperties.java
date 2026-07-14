@@ -25,8 +25,9 @@ public class MultiRedisProperties {
 
     // ========== Official format compatibility (top-level fields) ==========
     // These fields support the official Spring Boot Redis configuration format
-    // for backward compatibility. When 'clusters' is empty, these fields are used
-    // to create a 'default' cluster.
+    // for backward compatibility. When no cluster named 'default' exists in
+    // {@code clusters}, these fields are used to create a 'default' cluster.
+    // Official format and multi-cluster format can coexist.
 
     /** Redis host (official format compatibility) */
     private String host = "localhost";
@@ -102,20 +103,6 @@ public class MultiRedisProperties {
     public void setLettuce(Lettuce lettuce) { this.lettuce = lettuce; }
 
     /**
-     * Check if official Spring Boot Redis format is configured.
-     * Returns true if either cluster.nodes or host/port is explicitly set.
-     * This works regardless of whether multi-cluster format is also configured (mixed).
-     */
-    public boolean isUsingOfficialFormat() {
-        // Check if cluster mode (official format): spring.data.redis.cluster.nodes is set
-        if (cluster != null && cluster.getNodes() != null && !cluster.getNodes().isEmpty()) {
-            return true;
-        }
-        // Check if standalone mode (official format): host is not default, or port is not default, or password/url is set
-        return !"localhost".equals(host) || port != 6379 || password != null || url != null;
-    }
-
-    /**
      * Create a default cluster from official format configuration.
      */
     public Cluster createDefaultClusterFromOfficialFormat() {
@@ -146,6 +133,9 @@ public class MultiRedisProperties {
         return defaultCluster;
     }
 
+    /**
+     * Cluster connection properties (spring.data.redis.clusters.{name}).
+     */
     public static class Cluster {
 
         private String url;
@@ -234,6 +224,8 @@ public class MultiRedisProperties {
 
     /**
      * Supported serializer types.
+     * <p>Names are intentionally lowercase to match Spring Boot relaxed
+     * property binding from YAML configuration (e.g. {@code key: json}).
      */
     public enum SerializerType {
         /** JdkSerializationRedisSerializer - Java serialization (official default) */
@@ -249,7 +241,7 @@ public class MultiRedisProperties {
     /**
      * Redis Cluster configuration (spring.data.redis.clusters.{name}.cluster.*).
      */
-    public static class ClusterConfig {
+    static class ClusterConfig {
 
         private List<String> nodes;
         private Integer maxRedirects;
@@ -265,6 +257,9 @@ public class MultiRedisProperties {
         public void setReadFrom(ReadFrom readFrom) { this.readFrom = readFrom; }
     }
 
+    /**
+     * Lettuce client properties.
+     */
     public static class Lettuce {
 
         private Pool pool;
@@ -303,6 +298,9 @@ public class MultiRedisProperties {
         public void setPeriod(Duration period) { this.period = period; }
     }
 
+    /**
+     * Pool properties.
+     */
     public static class Pool {
 
         private int maxActive = 8;

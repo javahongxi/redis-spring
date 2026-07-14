@@ -12,12 +12,12 @@
     <artifactId>multi-redis-spring-boot-autoconfigure</artifactId>
     <name>multi-redis-spring-boot-autoconfigure</name>
     <description>Auto-configuration for multiple Redis clusters</description>
-    <url>https://github.com/javahongxi/multi-redis-spring-boot-starter</url>
+    <url>https://github.com/javahongxi/redis-spring</url>
 
     <scm>
         <connection>scm:git:git://github.com/javahongxi/multi-redis-spring-boot-starter.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/javahongxi/multi-redis-spring-boot-starter.git</developerConnection>
-        <url>https://github.com/javahongxi/multi-redis-spring-boot-starter</url>
+        <url>https://github.com/javahongxi/redis-spring</url>
         <tag>HEAD</tag>
     </scm>
 

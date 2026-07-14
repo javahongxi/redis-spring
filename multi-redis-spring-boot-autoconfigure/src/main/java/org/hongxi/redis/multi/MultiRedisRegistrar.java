@@ -8,6 +8,7 @@ import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.boot.convert.DurationStyle;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -377,19 +378,7 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
     }
 
     private Duration parseDuration(String value) {
-        if (value.startsWith("PT") || value.startsWith("pt")) {
-            return Duration.parse(value);
-        }
-        if (value.endsWith("ms")) {
-            return Duration.ofMillis(Long.parseLong(value.substring(0, value.length() - 2)));
-        }
-        if (value.endsWith("s")) {
-            return Duration.ofSeconds(Long.parseLong(value.substring(0, value.length() - 1)));
-        }
-        if (value.endsWith("m")) {
-            return Duration.ofMinutes(Long.parseLong(value.substring(0, value.length() - 1)));
-        }
-        return Duration.ofSeconds(Long.parseLong(value));
+        return DurationStyle.detect(value).parse(value);
     }
 
     private MultiRedisProperties.SerializerType parseSerializerType(String value) {
@@ -402,18 +391,6 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
             log.warn("[multi-redis] Unknown serializer type '{}', using default", value);
             return null;
         }
-    }
-
-    private RedisSerializer<?> toRedisSerializer(MultiRedisProperties.SerializerType type) {
-        if (type == null) {
-            return RedisSerializer.java();
-        }
-        return switch (type) {
-            case java -> RedisSerializer.java();
-            case json -> RedisSerializer.json();
-            case string -> RedisSerializer.string();
-            case byteArray -> RedisSerializer.byteArray();
-        };
     }
 
     static LettuceConnectionFactory createConnectionFactory(ClusterConfig config) {
@@ -586,15 +563,15 @@ public class MultiRedisRegistrar implements ImportBeanDefinitionRegistrar, Envir
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         // Set serializers from configuration (default: java serialization, same as official)
-        template.setKeySerializer(toRedisSerializerStatic(config.serializerKey));
-        template.setValueSerializer(toRedisSerializerStatic(config.serializerValue));
-        template.setHashKeySerializer(toRedisSerializerStatic(config.serializerHashKey));
-        template.setHashValueSerializer(toRedisSerializerStatic(config.serializerHashValue));
+        template.setKeySerializer(toRedisSerializer(config.serializerKey));
+        template.setValueSerializer(toRedisSerializer(config.serializerValue));
+        template.setHashKeySerializer(toRedisSerializer(config.serializerHashKey));
+        template.setHashValueSerializer(toRedisSerializer(config.serializerHashValue));
         template.afterPropertiesSet();
         return template;
     }
 
-    private static RedisSerializer<?> toRedisSerializerStatic(MultiRedisProperties.SerializerType type) {
+    private static RedisSerializer<?> toRedisSerializer(MultiRedisProperties.SerializerType type) {
         if (type == null) {
             return RedisSerializer.java();
         }

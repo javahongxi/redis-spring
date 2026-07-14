@@ -16,7 +16,7 @@
     <packaging>pom</packaging>
     <name>multi-redis-spring-boot</name>
     <description>Spring Boot Starter for multiple Redis clusters</description>
-    <url>https://github.com/javahongxi/multi-redis-spring-boot-starter</url>
+    <url>https://github.com/javahongxi/redis-spring</url>
 
     <modules>
         <module>multi-redis-spring-boot-autoconfigure</module>
@@ -47,7 +47,7 @@
     <scm>
         <connection>scm:git:git://github.com/javahongxi/multi-redis-spring-boot-starter.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/javahongxi/multi-redis-spring-boot-starter.git</developerConnection>
-        <url>https://github.com/javahongxi/multi-redis-spring-boot-starter</url>
+        <url>https://github.com/javahongxi/redis-spring</url>
         <tag>HEAD</tag>
     </scm>
 

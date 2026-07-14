@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * @author javahongxi
  * @see org.hongxi.redis.multi.MultiRedisProperties
  */
-@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RedisCluster {
