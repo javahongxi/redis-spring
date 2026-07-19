@@ -28,6 +28,14 @@ Spring Boot Starter for connecting to multiple Redis instances/clusters from a s
 </dependency>
 ```
 
+> **Note**: If you are using **Spring Boot 4.x**, you need to add the following dependency explicitly:
+> ```xml
+> <dependency>
+>     <groupId>tools.jackson.core</groupId>
+>     <artifactId>jackson-databind</artifactId>
+> </dependency>
+> ```
+
 ### Configuration
 
 **Multi-cluster format**:
